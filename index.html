@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asim Razaq | Growth Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #040810;
+            --card-bg: #0a0e17;
+            --brand-cyan: #00BFFF;
+            --brand-royal: #0072CE;
+            --brand-red: #FF0000;
+            --brand-pink: #FF007F;
+            --brand-orange: #FF8C00;
+            --brand-gold: #FFCC33;
+        }
+        body, html { 
+            margin: 0; padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--navy); color: white;
+            overflow-x: hidden; height: 100%;
+        }
+
+        #loader {
+            position: fixed; inset: 0; background: var(--navy);
+            z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+
+        .loader-bar-container {
+            width: 240px; height: 3px; background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px; overflow: hidden; margin-top: 20px;
+        }
+
+        .loader-bar-fill { width: 0%; height: 100%; background: var(--brand-cyan); }
+
+        #canvas-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+        }
+        
+        #master-stage {
+            display: flex; width: 300vw; height: 100vh;
+            opacity: 0; will-change: transform;
+        }
+
+        .panel {
+            width: 100vw; height: 100vh; overflow-y: auto;
+            position: relative; z-index: 10; padding-top: 120px;
+        }
+
+        .gsap-reveal { opacity: 0; transform: translateY(20px); }
+
+        .strategy-card {
+            background: rgba(10, 14, 23, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.2rem;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center;
+            transition: all 0.3s ease;
+            padding: 1.5rem;
+            cursor: pointer;
+            height: 100%;
+        }
+
+        .strategy-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .icon-circle {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .nav-blur {
+            background: rgba(4, 8, 16, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .back-btn-ui {
+            background: #ffffff; color: #000000;
+            padding: 8px 16px; border-radius: 100px;
+            font-size: 10px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn-ui:hover {
+            transform: scale(1.05);
+            background: #f0f0f0;
+        }
+
+        .simple-content-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            border-left: 4px solid var(--brand-cyan);
+        }
+
+        .skill-tag {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Logo Branding Classes */
+        .color-e { color: var(--brand-cyan); }
+        .color-v { color: var(--brand-cyan); }
+        .color-e2 { color: var(--brand-cyan); }
+        .color-n { color: var(--brand-cyan); }
+        .color-t { color: var(--brand-cyan); }
+        .color-C { color: var(--brand-royal); }
+        .color-O { color: var(--brand-red); }
+        .color-M { color: var(--brand-pink); }
+        .color-B { color: var(--brand-orange); }
+        .color-O2 { color: var(--brand-gold); }
+
+        @media print {
+            body, html { overflow: visible !important; height: auto !important; background: white !important; color: black !important; }
+            #canvas-container, nav, button, #loader { display: none !important; }
+            #master-stage { display: block !important; width: 100% !important; height: auto !important; opacity: 1 !important; transform: none !important; }
+            .panel { width: 100% !important; height: auto !important; overflow: visible !important; padding-top: 20px !important; display: block !important; position: relative !important; page-break-after: always; }
+            .gsap-reveal { opacity: 1 !important; transform: none !important; }
+            .strategy-card { border: 1px solid #ddd !important; background: white !important; color: black !important; box-shadow: none !important; }
+            .simple-content-box { background: #f9f9f9 !important; border: 1px solid #eee !important; border-left: 4px solid #00BFFF !important; color: black !important; }
+            .skill-tag { border: 1px solid #ccc !important; color: black !important; }
+            .text-gray-400, .text-gray-500 { color: #555 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 bg-[#00BFFF] rounded-2xl flex items-center justify-center overflow-hidden">
+                <img src="https://i.ibb.co/MDpp13RX/profile.jpg" alt="AR" class="w-full h-full object-cover">
+            </div>
+            <div class="loader-bar-container"><div class="loader-bar-fill" id="loader-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <nav class="fixed top-0 w-full z-[100] nav-blur px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div id="back-nav-container" class="hidden opacity-0">
+                    <button onclick="slideTo('home')" class="back-btn-ui">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        <span>Strategy</span>
+                    </button>
+                </div>
+                
+                <div id="profile-brand" class="flex items-center space-x-3 cursor-pointer group" onclick="slideTo('about')">
+                    <div class="w-10 h-10 rounded-lg overflow-hidden border border-white/20 transition-transform group-hover:scale-110">
+                        <img src="https://i.ibb.co/MDpp13RX/profile.jpg" alt="AR" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <span class="block font-bold text-xs tracking-wider uppercase">Muhammad Asim Razaq</span>
+                        <span class="text-[8px] text-[#00BFFF] font-extrabold uppercase tracking-widest">Growth Strategy Partner</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="slideTo('about')" class="bg-white/10 hover:bg-white/20 text-white border border-white/10 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors">About Me</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="master-stage">
+        <!-- Panel 1: Home/Growth Plan -->
+        <div id="home-panel" class="panel">
+            <section class="max-w-6xl mx-auto px-6 py-10">
+                <div class="gsap-reveal mb-12 text-center">
+                    <h1 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight">
+                        Scaling 
+                        <span class="inline-flex">
+                            <span class="color-e">e</span><span class="color-v">v</span><span class="color-e2">e</span><span class="color-n">n</span><span class="color-t">t</span><span class="color-C">C</span><span class="color-O">O</span><span class="color-M">M</span><span class="color-B">B</span><span class="color-O2">O</span>
+                        </span>
+                        <br>Through Data & Content.
+                    </h1>
+                    <p class="text-lg text-gray-400 max-w-xl mx-auto">
+                        I am Asim Razaq, an Analytical Digital Marketer ready to help eventCOMBO find more customers, build trust, and scale using technical marketing and high-impact content.
+                    </p>
+                </div>
+
+                <div class="gsap-reveal mb-8 text-center">
+                    <h2 class="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500">The 8-Point Growth Roadmap</h2>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+                    <div class="gsap-reveal strategy-card hover:border-[#00BFFF]" onclick="handleSectionClick('infinite-content')">
+                        <div class="icon-circle text-[#00BFFF]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">Video Production</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#FF0000]" onclick="handleSectionClick('outreach')">
+                        <div class="icon-circle" style="color: #FF0000">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">Sales Outreach</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#FF007F]" onclick="handleSectionClick('design')">
+                        <div class="icon-circle" style="color: #FF007F">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.168 0.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332 0.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332 0.477-4.5 1.253"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">Lead Magnets</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#FF8C00]" onclick="handleSectionClick('ai')">
+                        <div class="icon-circle" style="color: #FF8C00">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">AI Automation</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#0072CE]" onclick="handleSectionClick('seo')">
+                        <div class="icon-circle" style="color: #0072CE">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">SEO Content</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#FFCC33]" onclick="handleSectionClick('partnerships')">
+                        <div class="icon-circle" style="color: #FFCC33">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">Partnerships</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#00BFFF]" onclick="handleSectionClick('ads')">
+                        <div class="icon-circle" style="color: #00BFFF">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">Retargeting</h4>
+                    </div>
+                    <div class="gsap-reveal strategy-card hover:border-[#FF007F]" onclick="handleSectionClick('data')">
+                        <div class="icon-circle" style="color: #FF007F">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <h4 class="font-bold text-[10px] uppercase tracking-widest">Analytics</h4>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Panel 2: Detail Panel -->
+        <div id="detail-panel" class="panel">
+            <div id="dynamic-content" class="max-w-4xl mx-auto px-6 pb-20"></div>
+        </div>
+
+        <!-- Panel 3: About Me / Experience -->
+        <div id="about-panel" class="panel">
+            <section class="max-w-4xl mx-auto px-6 pb-20">
+                <div class="gsap-reveal flex flex-col md:flex-row items-center gap-8 mb-16">
+                    <div class="w-32 h-32 md:w-48 md:h-48 rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl">
+                        <img src="https://i.ibb.co/MDpp13RX/profile.jpg" alt="Asim Razaq" class="w-full h-full object-cover">
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h2 class="text-4xl md:text-5xl font-extrabold mb-2">Muhammad Asim Razaq</h2>
+                        <p class="text-lg text-[#00BFFF] font-bold mb-4 uppercase tracking-widest">Technical Digital Marketer | Content & SEO Strategist</p>
+                        <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs text-gray-400">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                asim.razaq1999@gmail.com
+                            </span>
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Punjab, Pakistan
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1 space-y-8">
+                        <div class="gsap-reveal">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Summary</h3>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                I am an Analytical Digital Marketer with a background in Biotechnology (GPA 3.67) and Frontend Development. I leverage 6 years of Notion expertise for project management and editorial planning to deliver high-impact growth strategies.
+                            </p>
+                        </div>
+                        
+                        <div class="gsap-reveal">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Education</h3>
+                            <div class="border-l border-white/10 pl-4 py-1">
+                                <p class="text-xs font-bold text-white">Bachelor of Biotechnology</p>
+                                <p class="text-[10px] text-gray-500">CECOS University | 2018 - 2022</p>
+                                <p class="text-[11px] text-[#00BFFF] mt-1">GPA: 3.67</p>
+                            </div>
+                        </div>
+
+                        <div class="gsap-reveal">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Core Skills</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="skill-tag">Semrush</span>
+                                <span class="skill-tag">CapCut</span>
+                                <span class="skill-tag">Notion</span>
+                                <span class="skill-tag">HTML/CSS</span>
+                                <span class="skill-tag">SEO Copy</span>
+                                <span class="skill-tag">GA4</span>
+                                <span class="skill-tag">AI Workflow</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 space-y-8">
+                        <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4 gsap-reveal">Professional Experience</h3>
+                        
+                        <div class="space-y-10">
+                            <div class="gsap-reveal relative pl-8 before:content-[''] before:absolute before:left-0 before:top-0 before:w-px before:h-full before:bg-gradient-to-b before:from-[#00BFFF] before:to-transparent">
+                                <div class="absolute left-[-4px] top-0 w-2 h-2 rounded-full bg-[#00BFFF]"></div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-lg font-bold">Digital Marketing & Content Consultant</h4>
+                                    <span class="text-[10px] bg-white/10 px-2 py-1 rounded text-gray-400">Jan 2024 - Nov 2025</span>
+                                </div>
+                                <p class="text-xs text-[#00BFFF] mb-3 uppercase tracking-widest font-bold">Freelance</p>
+                                <ul class="text-sm text-gray-400 space-y-2 list-disc list-inside">
+                                    <li>I developed SEO-optimized reports and blogs for international projects.</li>
+                                    <li>I managed end-to-end creation of video assets using CapCut and Canva.</li>
+                                    <li>I built custom Notion ecosystems for multi-channel editorial calendars.</li>
+                                    <li>I conducted keyword gap analysis using Semrush to increase organic reach.</li>
+                                </ul>
+                            </div>
+
+                            <div class="gsap-reveal relative pl-8 before:content-[''] before:absolute before:left-0 before:top-0 before:w-px before:h-full before:bg-white/10">
+                                <div class="absolute left-[-4px] top-0 w-2 h-2 rounded-full bg-white/30"></div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-lg font-bold">Junior Frontend Developer</h4>
+                                    <span class="text-[10px] bg-white/10 px-2 py-1 rounded text-gray-400">Sep 2023 - Dec 2023</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-3 uppercase tracking-widest font-bold">Internship</p>
+                                <p class="text-sm text-gray-400">I developed responsive website interfaces using HTML and CSS, ensuring mobile accessibility and SEO-friendly site architecture.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const dataMap = {
+            'infinite-content': { color: '#00BFFF', title: "Video Production", hero: "I will create a constant stream of high-quality short-form videos for eventCOMBO.", plan: "I take your long-form recordings or existing assets and transform them into 10+ viral clips for social media every single week.", impact: "This builds massive brand awareness and keeps eventCOMBO top-of-mind for your audience.", asim: "I will handle the picking, editing, captioning, and scheduling of all video assets." },
+            'outreach': { color: '#FF0000', title: "Cold Outreach", hero: "I will build a system to find and pitch high-value prospects for eventCOMBO.", plan: "I set up automated, highly personalized email sequences that target the exact decision-makers you need.", impact: "This generates a predictable pipeline of sales calls and demo requests.", asim: "I will write the copy, source the leads, and manage the technical setup of the outreach tools." },
+            'design': { color: '#FF007F', title: "Lead Magnets", hero: "I will design guides and tools that capture customer data.", plan: "I create professional PDF guides and industry reports that users download in exchange for their email address.", impact: "This establishes authority and builds a warm list of leads for nurturing.", asim: "I will research the topics, write the content, and design the landing pages." },
+            'ai': { color: '#FF8C00', title: "AI Automation", hero: "I will automate your repetitive tasks to save eventCOMBO hours every day.", plan: "I use AI agents and tools to handle initial customer inquiries and lead qualification 24/7.", impact: "Your team focuses on closing deals while AI handles the manual data entry and sorting.", asim: "I will build the custom AI workflows and integrate them into your current tech stack." },
+            'seo': { color: '#0072CE', title: "SEO Content", hero: "I will rank eventCOMBO for the keywords that matter.", plan: "I write deeply researched articles targeting 'commercial intent' keywords to capture traffic from Google.", impact: "You get free, high-intent organic traffic that converts into users.", asim: "I will perform the keyword research and write the high-ranking articles for your blog." },
+            'partnerships': { color: '#FFCC33', title: "Partnerships", hero: "I will find and secure strategic partners to expand your reach.", plan: "I identify companies with complementary services and negotiate co-marketing deals.", impact: "This leverages existing trust from other brands to get eventCOMBO new leads instantly.", asim: "I will handle the outreach, coordination, and execution of shared marketing campaigns." },
+            'ads': { color: '#00BFFF', title: "Retargeting Ads", hero: "I will bring 'lost' website visitors back to eventCOMBO to finish their conversion.", plan: "I set up tracking to show specific ads to people who visited your site but didn't convert.", impact: "This dramatically lowers your cost-per-acquisition by targeting warm leads.", asim: "I will design the ad creative, set up the tracking, and optimize the ad spend." },
+            'data': { color: '#FF007F', title: "Analytics", hero: "I will give eventCOMBO full visibility into what is working.", plan: "I create a single source of truth dashboard showing exactly where your leads come from.", impact: "We make data-driven decisions to scale the winning channels and cut waste.", asim: "I will build your tracking dashboard and provide you with actionable weekly reports." }
+        };
+
+        const stage = document.getElementById('master-stage');
+        const detailPanel = document.getElementById('detail-panel');
+        const dynamicDiv = document.getElementById('dynamic-content');
+        const loader = document.getElementById('loader');
+        const loaderFill = document.getElementById('loader-fill');
+        const backNavContainer = document.getElementById('back-nav-container');
+
+        // State for 3D interactions
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+        let baseSpeed = 0.015;
+        let currentSpeedMultiplier = 1;
+
+        function slideTo(targetId) {
+            if (targetId === 'home') {
+                gsap.to(stage, { x: 0, duration: 0.6, ease: "power2.out" });
+                gsap.to(backNavContainer, { opacity: 0, x: -10, duration: 0.3, onComplete: () => backNavContainer.classList.add('hidden') });
+            } else if (targetId === 'about') {
+                gsap.to(stage, { x: '-200vw', duration: 0.6, ease: "power2.out" });
+                backNavContainer.classList.remove('hidden');
+                gsap.to(backNavContainer, { opacity: 1, x: 0, duration: 0.3 });
+                initGSAPReveals("#about-panel .gsap-reveal");
+            } else {
+                renderDetail(targetId);
+                gsap.to(stage, { x: '-100vw', duration: 0.6, ease: "power2.out" });
+                detailPanel.scrollTo({ top: 0 });
+                backNavContainer.classList.remove('hidden');
+                gsap.to(backNavContainer, { opacity: 1, x: 0, duration: 0.3 });
+                initGSAPReveals("#dynamic-content .gsap-reveal");
+            }
+        }
+
+        // New Interaction Logic
+        function handleSectionClick(id) {
+            // "Warp Speed" 3D effect
+            currentSpeedMultiplier = 15;
+            gsap.to({ val: 15 }, {
+                val: 1,
+                duration: 1.5,
+                ease: "power2.inOut",
+                onUpdate: function() { currentSpeedMultiplier = this.targets()[0].val; }
+            });
+            slideTo(id);
+        }
+
+        function triggerShockwave() {
+            // "Shockwave" Ripple effect on camera
+            gsap.to(camera.position, { z: 4.5, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out" });
+        }
+
+        document.addEventListener('mousedown', (e) => {
+            // If click is not on a strategy card or interactive button, trigger shockwave
+            if (!e.target.closest('.strategy-card') && !e.target.closest('button')) {
+                triggerShockwave();
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            // Map mouse to a range of -1 to 1
+            targetX = (e.clientX / window.innerWidth) * 2 - 1;
+            targetY = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        function renderDetail(id) {
+            const d = dataMap[id];
+            if(!d) return;
+            dynamicDiv.innerHTML = `
+                <div class="gsap-reveal">
+                    <h3 class="text-5xl font-extrabold mb-4 tracking-tight" style="color: ${d.color}">${d.title}</h3>
+                    <p class="text-2xl text-white/90 font-medium mb-12 leading-snug">${d.hero}</p>
+                    <div class="space-y-6">
+                        <div class="simple-content-box gsap-reveal" style="border-color: ${d.color}">
+                            <h4 class="text-xs font-black uppercase tracking-widest mb-2 opacity-50 text-white">How I Do It</h4>
+                            <p class="text-lg text-white/80">${d.plan}</p>
+                        </div>
+                        <div class="simple-content-box gsap-reveal" style="border-color: #ffffff">
+                            <h4 class="text-xs font-black uppercase tracking-widest mb-2 opacity-50 text-white">Business Impact</h4>
+                            <p class="text-lg text-white/80">${d.impact}</p>
+                        </div>
+                        <div class="p-8 rounded-2xl bg-white/5 border border-white/10 gsap-reveal">
+                            <h4 class="text-xs font-black uppercase tracking-widest mb-4" style="color: ${d.color}">My Personal Deliverables</h4>
+                            <p class="text-xl text-white font-bold leading-relaxed">${d.asim}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initGSAPReveals(selector = ".gsap-reveal") {
+            gsap.fromTo(selector, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.1 });
+        }
+
+        let scene, camera, renderer, particles;
+        const PARTICLE_COUNT = 500; 
+        
+        function initStars() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(PARTICLE_COUNT * 3);
+            const velocities = new Float32Array(PARTICLE_COUNT);
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 40;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+                velocities[i] = 0.015 + Math.random() * 0.03;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+
+            const material = new THREE.PointsMaterial({
+                size: 0.35,
+                map: texture,
+                transparent: true,
+                opacity: 0.4,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Responsive background to cursor (easing)
+                mouseX += (targetX - mouseX) * 0.05;
+                mouseY += (targetY - mouseY) * 0.05;
+                
+                particles.rotation.y = mouseX * 0.15;
+                particles.rotation.x = -mouseY * 0.15;
+
+                const pos = particles.geometry.attributes.position.array;
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    // Constant speed + interaction multiplier
+                    pos[i * 3 + 2] += velocities[i] * currentSpeedMultiplier;
+                    
+                    if (pos[i * 3 + 2] > 10) {
+                        pos[i * 3 + 2] = -70;
+                        pos[i * 3] = (Math.random() - 0.5) * 40;
+                        pos[i * 3 + 1] = (Math.random() - 0.5) * 40;
+                    }
+                }
+                particles.geometry.attributes.position.needsUpdate = true;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        window.onload = () => {
+            initStars();
+            gsap.to(loaderFill, { width: "100%", duration: 0.8, onComplete: () => {
+                gsap.to(loader, { opacity: 0, duration: 0.3, onComplete: () => {
+                    loader.style.display = 'none';
+                    gsap.to(stage, { opacity: 1, duration: 0.5, onComplete: () => initGSAPReveals("#home-panel .gsap-reveal") });
+                }});
+            }});
+        };
+
+        window.onresize = () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        };
+    </script>
+</body>
+</html>
